@@ -1,0 +1,11 @@
+# Git ignore file
+
+# Ignore the CMake build folder.
+VS12W32/
+VS12W64/
+VS15W32/
+VS15W64/
+VS16W32/
+VS16W64/
+build/
+
