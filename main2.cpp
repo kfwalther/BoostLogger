@@ -50,56 +50,9 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", logging::trivial::severity_lev
 BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
 
 
-// The backend collects records being forwarded from the front-end loggers.
-class MyCustomBackend : public sinks::basic_sink_backend< 
-        sinks::combine_requirements<
-            sinks::synchronized_feeding,            
-            sinks::flushing                         
-        >::type>
-{
-private:
-    // The file to write the collected information to.
-    std::ofstream logFile;
-
-public:
-    // The constructor initializes the internal data
-    explicit MyCustomBackend(const char * file_name);
-
-    // The function consumes the log records that come from the frontend
-    void consume(logging::record_view const& rec);
-    // The function flushes the file
-    void flush();
-
-};
-
-// The constructor initializes the internal data
-MyCustomBackend::MyCustomBackend(const char * file_name) :
-        logFile(file_name) {
-    if (!logFile.is_open()) {
-        throw std::runtime_error("Could not open the specified file!");
-    }
-}
-
-// This function consumes the log records that come from the frontend.
-void MyCustomBackend::consume(logging::record_view const & rec) {
-    // If the NoNewline attribute is present, skip the newline.
-    if (rec.attribute_values().count("NoNewline")) {
-        logFile << *rec[boost::log::expressions::smessage];
-    } else {
-        logFile << *rec[boost::log::expressions::smessage] << std::endl;
-    }
-    // This is the equivalent of setting auto_flush.
-    this->flush();
-}
-
-/** The function flushes the file. */
-void MyCustomBackend::flush() {
-    logFile.flush();
-}
-
 /** Initialize the Boost.Log logging. */
 void init() {
-    // Alias the custom sink types.
+    // Alias the backend and sink types.
 	typedef boost::log::sinks::text_ostream_backend MyBackendType;
     typedef boost::log::sinks::synchronous_sink< MyBackendType > MyBackendSinkType;
     // Grab the Boost Log core.
