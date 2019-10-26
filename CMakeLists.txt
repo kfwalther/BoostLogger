@@ -6,6 +6,8 @@ project(BoostLogger LANGUAGES CXX)
 set(BOOST_ROOT "D:/apps/boost/boost_1_71_0")
 set(BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/lib)
 set(Boost_COMPILER -vc142)
+# Use the static Boost libraries.
+set(Boost_USE_STATIC_LIBS ON)
 # Turn this on to debug CMake's search for Boost includes and libraries.
 set(Boost_DEBUG OFF)
 
@@ -22,11 +24,12 @@ endif()
 add_executable(${PROJECT_NAME}Test1 main1.cpp)
 #[[ Add these definitions to the compilation due to issues: 
  	https://stackoverflow.com/q/41193447/3987854
-	https://stackoverflow.com/q/23137637/3987854 ]]
+]]
 target_compile_definitions(${PROJECT_NAME}Test1 PUBLIC 
 	BOOST_ALL_NO_LIB
-	BOOST_LOG_DYN_LINK
 )
-
+# Add the Boost include directory and Boost libraries.
 target_include_directories(${PROJECT_NAME}Test1 PUBLIC ${Boost_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME}Test1 PUBLIC Boost::filesystem Boost::log)
+# Set this target as the VS startup project.
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME}Test1)

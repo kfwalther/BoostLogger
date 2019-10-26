@@ -104,7 +104,7 @@ void init() {
     // Grab the Boost Log core.
     auto coreHandle = boost::log::core::get();
     // Define the path where the log files should reside.
-    boost::filesystem::path destinationDir("C:\\test");
+    boost::filesystem::path destinationDir("D:\\test");
 
     // Create a minimal severity table filter
     typedef expr::channel_severity_filter_actor< std::string, logging::trivial::severity_level > min_severity_filter;
@@ -164,5 +164,6 @@ int main (int numArgs, char const * const argList) {
     LOG_CATEGORY3(info) << "[Put this on line 1 also]";
     LOG_CATEGORY3(info) << "[Put this on line 2]";
 
+	std::cout << "Successful Completion!" << std::endl;
     return EXIT_SUCCESS;
 }
