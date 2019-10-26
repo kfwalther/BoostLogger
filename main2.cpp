@@ -100,7 +100,8 @@ void MyCustomBackend::flush() {
 /** Initialize the Boost.Log logging. */
 void init() {
     // Alias the custom sink types.
-    typedef boost::log::sinks::synchronous_sink<MyCustomBackend> CustomBackendType;
+	typedef boost::log::sinks::text_ostream_backend MyBackendType;
+    typedef boost::log::sinks::synchronous_sink< MyBackendType > MyBackendSinkType;
     // Grab the Boost Log core.
     auto coreHandle = boost::log::core::get();
     // Define the path where the log files should reside.
@@ -117,10 +118,14 @@ void init() {
 
     // Define log file 1.
     boost::filesystem::path logFile1(destinationDir / "category1.log");
-    // Create a custom backend.
-    boost::shared_ptr<MyCustomBackend> customBackend(new MyCustomBackend(logFile1.string().c_str()));
+    // Create a log backend, and add a stream to it.
+    boost::shared_ptr< MyBackendType > customBackend(new MyBackendType());
+	customBackend->add_stream(boost::shared_ptr< std::ostream >(
+			new std::ofstream(logFile1.string().c_str())));
+	// Enable auto flush for this backend.
+	customBackend->auto_flush(true);
     // Create a sink with the custom backend.
-    boost::shared_ptr<CustomBackendType> customSink(new CustomBackendType(customBackend));
+    boost::shared_ptr< MyBackendSinkType > customSink(new MyBackendSinkType(customBackend));
     // Add a filter to the sink.
     customSink->set_filter((channel == "Category1") && minSeverity && (severity >= logging::trivial::info));
     // Add the sink to the Boost.Log core.
@@ -128,10 +133,14 @@ void init() {
 
     // Define log file 2.
     boost::filesystem::path logFile2(destinationDir / "category2.log");
-    // Create a custom backend.
-    customBackend = boost::make_shared<MyCustomBackend>(logFile2.string().c_str());
+    // Create a log backend, and add a stream to it.
+    customBackend = boost::make_shared< MyBackendType >();
+	customBackend->add_stream(boost::shared_ptr< std::ostream >(
+			new std::ofstream(logFile2.string().c_str())));
+	// Enable auto flush for this backend.
+	customBackend->auto_flush(true);
     // Create a sink with the custom backend.
-    customSink = boost::make_shared<CustomBackendType>(customBackend);
+    customSink = boost::make_shared< MyBackendSinkType >(customBackend);
     // Add a filter to the sink.
     customSink->set_filter((channel == "Category2") && minSeverity && (severity >= logging::trivial::info));
     // Add the sink to the Boost.Log core.
@@ -139,30 +148,40 @@ void init() {
 
     // Define log file 3.
     boost::filesystem::path logFile3(destinationDir / "category3.log");
-    // Create a custom backend.
-    customBackend = boost::make_shared<MyCustomBackend>(logFile3.string().c_str());
+	// Create a log backend, and add a stream to it.
+	customBackend = boost::make_shared< MyBackendType >();
+	customBackend->add_stream(boost::shared_ptr< std::ostream >(
+			new std::ofstream(logFile3.string().c_str())));
+	// Enable auto flush for this backend.
+	customBackend->auto_flush(true);
+	// Disable the auto newline for this backend.
+	customBackend->set_auto_newline_mode(boost::log::sinks::auto_newline_mode::disabled_auto_newline);
     // Create a sink with the custom backend.
-    customSink = boost::make_shared<CustomBackendType>(customBackend);
+    customSink = boost::make_shared< MyBackendSinkType >(customBackend);
     // Add a filter to the sink.
     customSink->set_filter((channel == "Category3") && minSeverity && (severity >= logging::trivial::info));
     // Add the sink to the Boost.Log core.
     coreHandle->add_sink(customSink);
 }
 
+// This is the main entry point to the program.
 int main (int numArgs, char const * const argList) {
     double number1 = 42;
 
     // Initialize the Boost.Log logging.
     init();
 
-    LOG_CATEGORY1(info) << "New Category1 log.";
-    // Won't print to file b/c doesn't meet severity requirements.
+	// The Category1 logger has normal auto-newline. 
+	LOG_CATEGORY1(info) << "New Category1 log1.";
+	LOG_CATEGORY1(info) << "New Category1 log2.";
+	// Category2 logger won't print to file b/c doesn't meet severity requirements.
     LOG_CATEGORY2(trace) << "New Category2 log.";
 
-    // Remove newline character ('\n') from specific logs. 
-    LOG_CATEGORY3(info) << logging::add_value("NoNewline", true) << "[Put this on line 1]";
-    LOG_CATEGORY3(info) << "[Put this on line 1 also]";
+    // Category3 logger has auto-newline disabled. 
+    LOG_CATEGORY3(info) << "[Put this on line 1]";
+    LOG_CATEGORY3(info) << "[Put this on line 1 also]" << std::endl;
     LOG_CATEGORY3(info) << "[Put this on line 2]";
 
+	std::cout << "Successful Completion!" << std::endl;
     return EXIT_SUCCESS;
 }
